@@ -120,6 +120,29 @@ richtigen Ordner. Sofort geht es weiterhin ueber Verwaltung -> Aufgaben.
   eintragen und `docker compose up -d`.
 - Der Container laeuft als 1001:10, weil die ACLs der NAS dem Image-Benutzer (UID 100) den Zugriff
   auf `migrate.sh` verweigern.
+## Aus dem Bilderhaufen ein Archiv machen
+
+Reihenfolge, die sich am 21.09.2026 bewaehrt hat - nach jedem groesseren Upload wiederholbar:
+
+1. `.\scripts\datum-aus-dateiname.ps1` (Trockenlauf), dann mit `-Anwenden`.
+   WhatsApp entfernt das EXIF-Aufnahmedatum; Immich nimmt dann das Dateidatum, und das ist seit
+   dem Handy-Umzug der 19.04.2026. Das echte Datum steht im Namen (`IMG-20220127-WA0007.jpg`).
+   Beim ersten Lauf betraf das 182 von 734 Dateien aus den Jahren 2018 bis 2025. Das Original
+   bleibt unveraendert, Immich legt eine `.xmp`-Begleitdatei daneben und sortiert die Datei sofort
+   in den richtigen Jahresordner um.
+   **Die Uebernahme laeuft asynchron** (Begleitdatei schreiben, Metadaten neu lesen, einzeln
+   nacheinander). Ein Kontroll-Trockenlauf direkt danach zeigt deshalb noch offene Dateien -
+   ein paar Minuten warten, dann steht er auf 0.
+2. `.\scripts\album-vorschlag.ps1` erzeugt `listen\<Datum> Album-Vorschlag.csv`. Ereignisse
+   (Zeitspanne bis 14 Tage) bekommen das Datum der aeltesten Aufnahme vorangestellt; Sammlungen
+   ueber laengere Zeit (Personen, Themen) behalten ihren Namen; Screenshots, Messenger und
+   Aehnliches sind als "aussortieren" markiert - geloescht wird von keinem Skript.
+3. Liste pruefen, Spalten "Neuer Name" und "Aktion" anpassen, dann
+   `.\scripts\album-umbenennen.ps1 -Liste <csv>` (Trockenlauf) und mit `-Anwenden`.
+4. Die naechtliche Speicher-Migration zieht die Ordner nach.
+
+Ein Album, das sich ueber mehrere Jahre erstreckt, verteilt sich auf mehrere Jahresordner
+(`2018/Birkenheide`, `2023/Birkenheide`), weil `{{y}}` das Jahr des einzelnen Fotos ist.
 ## Abfragen ueber die API
 
 `scripts/immich-api.ps1` fragt Bibliotheken, Bestand und Auftrags-Warteschlangen ab und
