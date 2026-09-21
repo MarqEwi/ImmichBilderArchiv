@@ -143,8 +143,13 @@ docker logs -t immich_server                 # mit Docker-Zeitstempeln
 
 Drei Dinge gehoeren gesichert:
 
-1. **Datenbank.** Immich legt selbst Dumps unter `<Fotos>/backups/` ab (Admin-Einstellungen,
-   nachts). Manuell:
+1. **Datenbank.** Immich legt selbst Dumps unter `<Fotos>/backups/` ab (taeglich 02:00,
+   7 Staende). Von Hand anstossen: Verwaltung -> Aufgaben -> Button **Aufgabe erstellen**
+   oben rechts -> **Datenbanksicherung erstellen**. Der Auslöser steht nicht in der
+   Aufgabenliste selbst. Geprueft am 21.09.2026: erzeugt
+   `immich-db-backup-<Zeit>-v3.2.2-pg14.19.sql.gz`, rund 19 MB - fast alles Geodaten
+   fuer die Ortsauflösung, dieser Grundstock bleibt konstant.
+   Alternativ auf der Kommandozeile:
    ```sh
    docker exec -t immich_postgres pg_dumpall --clean --if-exists -U postgres \
      > "/volume1/@home/MarcEwers/Steves Bilder Archiv/immich/backups/dump-$(date +%F).sql"
@@ -157,6 +162,13 @@ Der Ordner `postgres/` selbst ist **kein** Backup - eine Dateikopie eines laufen
 ist im Zweifel unbrauchbar. Immer den Dump nehmen.
 
 ## Wiederherstellung
+
+**Bevorzugt ueber die Oberflaeche:** Verwaltung -> Wartung -> Abschnitt
+"Datenbanksicherung wiederherstellen". Dort stehen alle Sicherungen mit Version und
+Datum; ein Klick auf Wiederherstellen genuegt. Immich legt vorher automatisch einen
+Ruecksprungpunkt an, falls die Wiederherstellung scheitert.
+
+**Ueber die Kommandozeile**, wenn die Oberflaeche nicht erreichbar ist:
 
 ```sh
 cd /volume1/Grundlagen/docker/immich
