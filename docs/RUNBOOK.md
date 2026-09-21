@@ -26,10 +26,10 @@ Verwaltung -> Einstellungen -> Speicher-Template:
 {{y}}/{{#if album}}{{{album}}}{{else}}Ohne Album{{/if}}/{{filename}}
 ```
 
-Ergebnis:
+Ergebnis (am 21.09.2026 mit drei Videos geprueft):
 
 ```
-immich/library/
+immich/library/admin/
 ├── 2026/
 │   ├── 2026-09-21 Kindergeburtstag Olli/
 │   ├── 2026-08-03 Sommerfest/
@@ -47,6 +47,12 @@ Drei Dinge dazu:
   HTML-Entities um (aus `&` wird `&amp;`).
 - **Ablauf:** hochladen -> Album anlegen und zuweisen -> Job "Storage Template Migration" starten.
   Der Job sortiert auch rueckwirkend um, wenn das Template spaeter geaendert wird.
+
+- **Die Ebene `admin/`** fuegt Immich selbst ein: das Storage-Label des Benutzers. Sie ist
+  nicht Teil des Templates und laesst sich nicht abschalten.
+- **Videos belegen etwa doppelten Platz.** Immich behaelt das Original in `library/` und legt
+  eine transkodierte Fassung in `encoded-video/` ab. Gemessen: drei Clips mit 56 MB Originalen
+  ergaben 53 MB Transkodate.
 
 Gehoert ein Foto zu mehreren Alben, gewinnt das zuletzt erstellte. Fotos ohne Album landen unter
 `Ohne Album` und wandern beim naechsten Migrationslauf in den richtigen Ordner, sobald sie einem
