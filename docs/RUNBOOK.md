@@ -219,7 +219,32 @@ docker compose --profile ml rm -f immich-machine-learning
 
 ## External Library fuer import/
 
-Noch nicht eingerichtet. Dafuer muesste der Ordner `import/` zusaetzlich read-only in den
-Server gemountet werden (`type: bind`, `read_only: true`), danach in der Weboberflaeche
-unter Verwaltung -> Externe Bibliotheken der Pfad eingetragen werden. Immich verschiebt
-oder veraendert dort nichts. Erfordert eine Compose-Aenderung und einen Neustart des Servers.
+Eingerichtet am 21.09.2026. Der Ordner ist **nur lesend** als `/import` in den Server
+eingebunden (`IMPORT_LOCATION` in der `.env`, Langform-Bind mit `read_only: true`).
+Geprueft: `touch /import/...` im Container scheitert mit "Read-only file system".
+
+**Wichtig: Der Importpfad in der Oberflaeche ist der Pfad IM CONTAINER**, also `/import` -
+nicht der Host-Pfad. Einrichten unter Verwaltung -> Externe Bibliotheken:
+Bibliothek erstellen, Besitzer waehlen, Importpfad `/import` hinzufuegen, dann scannen.
+
+Dateien dorthin legst du per SMB:
+`\\STEVENAS\personal_folder\Steves Bilder Archiv\import\`
+
+Dort bestimmst du die Ordnernamen vollstaendig selbst - das Storage Template gilt hier
+nicht, Immich laesst die Dateien liegen, wo sie sind. Dieselbe Benennung wie in der
+verwalteten Bibliothek (`YYYY-MM-DD Titel`) ist sinnvoll, aber Handarbeit.
+
+Drei Dinge, die man dabei wissen muss:
+
+- **Verschieben kostet Metadaten.** Wird eine Datei innerhalb der Bibliothek an eine andere
+  Stelle bewegt, gilt sie beim naechsten Scan als neues Asset; Album-Zuordnung, Beschreibung
+  und Bewertung in Immich gehen verloren. Also erst einsortieren, dann scannen lassen.
+- **Geloeschte Dateien landen im Papierkorb.** Verschwindet eine Datei von der Platte, legt
+  Immich sie beim Rescan in den Papierkorb und entfernt sie nach 30 Tagen endgueltig.
+  Zurueckholen geht nur, indem man die Originaldatei wieder herstellt.
+- **Keine Symlinks** in den Importpfaden - Immich kommt damit nicht zurecht.
+
+Der Scan laeuft taeglich um 04:00 (`library.scan`, siehe Systemkonfiguration) und laesst
+sich jederzeit von Hand anstossen. Automatisches Ueberwachen des Dateisystems
+(`library.watch`) ist bewusst aus: Es gilt als experimentell und braucht inotify-Watches
+fuer jede Datei.

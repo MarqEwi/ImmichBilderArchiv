@@ -23,6 +23,14 @@ services:
         source: ${UPLOAD_LOCATION}
         target: /data
       - /etc/localtime:/etc/localtime:ro
+      # ANPASSUNG: Eingangsordner fuer die External Library, ausdruecklich nur lesend.
+      # Immich liest diese Dateien und laesst sie liegen, wo sie sind - das Storage Template
+      # gilt hier nicht, die Ordnernamen bestimmt der Nutzer selbst per SMB.
+      # In der Oberflaeche wird als Importpfad der Pfad IM CONTAINER eingetragen: /import
+      - type: bind
+        source: ${IMPORT_LOCATION}
+        target: /import
+        read_only: true
     env_file:
       - .env
     ports:
