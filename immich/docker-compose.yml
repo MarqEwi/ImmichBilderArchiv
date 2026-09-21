@@ -121,5 +121,36 @@ services:
         limits:
           memory: 256M
 
+  storage-migration:
+    # ANPASSUNG: zusaetzlicher Dienst, nicht Teil der offiziellen Datei. Stoesst nachts die
+    # Speicher-Migration an (siehe migrate.sh), damit nachtraeglich Alben zugeordnete Fotos
+    # ohne Handgriff in ihren Ereignisordner wandern. Kein Port, ~1 MB RAM.
+    container_name: immich_storage_migration
+    image: docker.io/curlimages/curl:8.22.0
+    # Als MarcEwers (1001:10) statt des Image-Benutzers (UID 100): die ACLs der NAS geben
+    # "anderen" keinen Zugriff, migrate.sh waere sonst nicht lesbar (Permission denied).
+    user: "1001:10"
+    entrypoint: ["/bin/sh", "/migrate.sh"]
+    environment:
+      MIGRATION_API_KEY: ${MIGRATION_API_KEY}
+      RUN_HOUR: "01"
+    volumes:
+      - ./migrate.sh:/migrate.sh:ro
+      # Zeitzone: das Image hat kein tzdata; Zonendatei des Hosts einblenden und TZ NICHT setzen,
+      # sonst rechnet date in UTC und der Lauf verschiebt sich um ein bis zwei Stunden.
+      - /usr/share/zoneinfo/Europe/Berlin:/etc/localtime:ro
+    depends_on:
+      - immich-server
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "1m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 16M
+
 volumes:
   model-cache:

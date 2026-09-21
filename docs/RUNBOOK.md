@@ -99,6 +99,27 @@ Unveraendert gelassen und warum:
 
 Nach dem Import einer geaenderten Datei: Die Einstellungen greifen sofort, ein Neustart
 der Container ist nicht noetig.
+## Handy-Sicherung und naechtliche Speicher-Migration
+
+Der vorgesehene Alltag: Die Immich-App sichert neue Handyfotos automatisch (App -> Sicherung:
+Album "Kamera", Hintergrundsicherung an, nur ueber WLAN; unter Android die App von der
+Akku-Optimierung ausnehmen). Der Server ist nur im LAN erreichbar, hochgeladen wird also zu Hause.
+
+Automatisch gesicherte Fotos haben noch kein Album und landen unter `<Jahr>/Ohne Album/`. Werden
+sie spaeter einem Album zugeordnet, verschiebt erst der Job "Speicher-Migration" die Dateien in den
+Albumordner. Damit das ohne Handgriff passiert, stoesst der Dienst `storage-migration`
+(Container `immich_storage_migration`, `immich/migrate.sh`) den Job jede Nacht in der Stunde 01 an -
+vor dem Backup um 02:00. Wer tagsueber Alben zuordnet, findet die Dateien am naechsten Morgen im
+richtigen Ordner. Sofort geht es weiterhin ueber Verwaltung -> Aufgaben.
+
+- Log: `docker logs immich_storage_migration` - je Nacht eine Zeile "Speicher-Migration angestossen"
+  oder "FEHLER: HTTP <Code>".
+- Von Hand: `docker compose run --rm --no-deps storage-migration once`
+- Der API-Schluessel steht als `MIGRATION_API_KEY` in der `.env` auf der NAS (600, nicht im Git).
+  Wird der Schluessel in Immich zurueckgezogen, meldet das Log HTTP 401; dann neuen Schluessel
+  eintragen und `docker compose up -d`.
+- Der Container laeuft als 1001:10, weil die ACLs der NAS dem Image-Benutzer (UID 100) den Zugriff
+  auf `migrate.sh` verweigern.
 ## Abfragen ueber die API
 
 `scripts/immich-api.ps1` fragt Bibliotheken, Bestand und Auftrags-Warteschlangen ab und

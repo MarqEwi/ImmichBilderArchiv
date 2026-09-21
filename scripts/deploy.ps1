@@ -26,6 +26,7 @@ $ssh   = "$User@$Nas"
 # Quelle -> Zielname. Die .env kommt zuletzt, damit sie bei einem Abbruch vorher nicht allein dasteht.
 $dateien = [ordered]@{
     "$repo\immich\docker-compose.yml" = 'docker-compose.yml'
+    "$repo\immich\migrate.sh"         = 'migrate.sh'
     "$repo\immich\.env"               = '.env'
 }
 
