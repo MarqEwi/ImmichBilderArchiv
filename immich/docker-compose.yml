@@ -1,0 +1,117 @@
+# Immich auf STEVENAS (UGREEN NASync DH2300, arm64).
+#
+# Abgeleitet von der offiziellen Datei des Releases v3.2.2:
+#   https://github.com/immich-app/immich/releases/download/v3.2.2/docker-compose.yml
+# Jede Abweichung ist mit "# ANPASSUNG:" markiert und begruendet.
+#
+# Ablage auf der NAS: /volume1/Grundlagen/docker/immich/  (Pfad ohne Leerzeichen)
+# Fotos:              /volume1/@home/MarcEwers/Steves Bilder Archiv/immich  (ueber UPLOAD_LOCATION)
+# Start:  docker compose up -d        Logs: docker compose logs -f
+name: immich
+
+services:
+  immich-server:
+    container_name: immich_server
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    # extends:
+    #   file: hwaccel.transcoding.yml
+    #   service: cpu # set to one of [nvenc, quicksync, rkmpp, vaapi, vaapi-wsl] for accelerated transcoding
+    volumes:
+      # ANPASSUNG: Langform statt "${UPLOAD_LOCATION}:/data". Der Zielordner enthaelt Leerzeichen
+      # ("Steves Bilder Archiv"); in der Kurzform wuerde Compose am Doppelpunkt falsch trennen.
+      - type: bind
+        source: ${UPLOAD_LOCATION}
+        target: /data
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - .env
+    ports:
+      - '2283:2283'
+    depends_on:
+      - redis
+      - database
+    restart: always
+    healthcheck:
+      disable: false
+    # ANPASSUNG: Speichergrenze. Die NAS hat 3,8 GB RAM, davon nur ~1,3 GB frei, und
+    # swappiness=1 - bei RAM-Not greift der OOM-Killer statt Swap. Ohne Grenze koennte
+    # Immich die produktiven Container (Home Assistant u. a.) verdraengen.
+    # Gemessen am 21.09.2026 im Leerlauf, ohne Fotos: 592 MB echter Speicher (cgroup "anon").
+    # Deshalb 896M statt der anfaenglichen 640M - dort blieben nur 48 MB Reserve.
+    # Achtung: "docker stats" zaehlt Page-Cache mit und zeigt deshalb hoehere Werte;
+    # den echten Bedarf zeigt "anon" in memory.stat des Containers.
+    deploy:
+      resources:
+        limits:
+          memory: 896M
+
+  immich-machine-learning:
+    container_name: immich_machine_learning
+    # For hardware acceleration, add one of -[armnn, cuda, rocm, openvino, rknn] to the image tag.
+    # Example tag: ${IMMICH_VERSION:-release}-cuda
+    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+    # extends: # uncomment this section for hardware acceleration - see https://docs.immich.app/features/ml-hardware-acceleration
+    #   file: hwaccel.ml.yml
+    #   service: cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference - use the `-wsl` version for WSL2 where applicable
+    # ANPASSUNG: Profil "ml". Dadurch startet dieser Dienst bei "docker compose up -d" NICHT mit.
+    # Grund: Der RAM reicht nicht fuer Maschinelles Lernen. Spaeter gezielt zuschaltbar mit
+    #   docker compose --profile ml up -d
+    # Vorher in den Admin-Einstellungen Smart Search / Gesichtserkennung einschalten.
+    profiles:
+      - ml
+    volumes:
+      - model-cache:/cache
+    env_file:
+      - .env
+    restart: always
+    healthcheck:
+      disable: false
+    # ANPASSUNG: Speichergrenze, falls das Profil spaeter aktiviert wird.
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  redis:
+    container_name: immich_redis
+    image: docker.io/valkey/valkey:9@sha256:70739f85ad2ee01a726a965584a0f94895f01b0c60b3cc8b0aeef11eaa6888cf
+    healthcheck:
+      test: redis-cli ping | grep -q PONG || exit 1
+    restart: always
+    # ANPASSUNG: Speichergrenze (siehe immich-server).
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  database:
+    container_name: immich_postgres
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_DB: ${DB_DATABASE_NAME}
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+      # ANPASSUNG: einkommentiert. /volume1 liegt auf rotierenden Platten
+      # (RAID1 auf sda, /sys/block/sda/queue/rotational = 1), nicht auf SSD.
+      DB_STORAGE_TYPE: 'HDD'
+    volumes:
+      # ANPASSUNG: Langform wie oben (einheitlich; dieser Pfad hat zwar keine Leerzeichen,
+      # bleibt aber in derselben Schreibweise, damit beide Bind-Mounts gleich aussehen).
+      - type: bind
+        source: ${DB_DATA_LOCATION}
+        target: /var/lib/postgresql/data
+    shm_size: 128mb
+    restart: always
+    healthcheck:
+      disable: false
+    # ANPASSUNG: Speichergrenze. Gemessen 21.09.2026: 145 MB echter Speicher (anon), der Rest
+    # der in "docker stats" sichtbaren ~300 MB ist Page-Cache und wird bei Bedarf freigegeben.
+    # 256M lassen genug Reserve; die eingesparten 64M gehen an immich-server.
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+volumes:
+  model-cache:

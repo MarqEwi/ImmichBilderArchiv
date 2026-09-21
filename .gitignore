@@ -1,2 +1,4 @@
 immich/.env
 *.bak
+backups/
+*.sql
