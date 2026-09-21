@@ -10,17 +10,31 @@
                    "accel":  "disabled",
                    "accelDecode":  true,
                    "acceptedAudioCodecs":  [
-                                               "aac",
-                                               "mp3",
-                                               "opus"
+                                               {
+                                                   "Length":  3
+                                               },
+                                               {
+                                                   "Length":  3
+                                               },
+                                               {
+                                                   "Length":  4
+                                               }
                                            ],
                    "acceptedContainers":  [
-                                              "mov",
-                                              "ogg",
-                                              "webm"
+                                              {
+                                                  "Length":  3
+                                              },
+                                              {
+                                                  "Length":  3
+                                              },
+                                              {
+                                                  "Length":  4
+                                              }
                                           ],
                    "acceptedVideoCodecs":  [
-                                               "h264"
+                                               {
+                                                   "Length":  4
+                                               }
                                            ],
                    "bframes":  -1,
                    "cqMode":  "auto",
@@ -32,13 +46,23 @@
                    "realtime":  {
                                     "enabled":  false,
                                     "resolutions":  [
-                                                        480,
-                                                        720,
-                                                        1080
+                                                        {
+
+                                                        },
+                                                        {
+
+                                                        },
+                                                        {
+
+                                                        }
                                                     ],
                                     "videoCodecs":  [
-                                                        "h264",
-                                                        "hevc"
+                                                        {
+                                                            "Length":  4
+                                                        },
+                                                        {
+                                                            "Length":  4
+                                                        }
                                                     ]
                                 },
                    "refs":  0,
@@ -106,7 +130,7 @@
                                 "concurrency":  2
                             },
                 "metadataExtraction":  {
-                                           "concurrency":  2
+                                           "concurrency":  1
                                        },
                 "migration":  {
                                   "concurrency":  2
@@ -127,7 +151,7 @@
                                     "concurrency":  2
                                 },
                 "thumbnailGeneration":  {
-                                            "concurrency":  2
+                                            "concurrency":  1
                                         },
                 "videoConversion":  {
                                         "concurrency":  1
@@ -179,7 +203,9 @@
                                         "modelName":  "PP-OCRv5_mobile"
                                     },
                             "urls":  [
-                                         "http://immich-machine-learning:3003"
+                                         {
+                                             "Length":  35
+                                         }
                                      ]
                         },
     "map":  {
@@ -189,7 +215,7 @@
             },
     "metadata":  {
                      "faces":  {
-                                   "import":  false
+                                   "import":  true
                                }
                  },
     "newVersionCheck":  {
