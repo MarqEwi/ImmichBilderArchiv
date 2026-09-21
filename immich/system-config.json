@@ -10,31 +10,17 @@
                    "accel":  "disabled",
                    "accelDecode":  true,
                    "acceptedAudioCodecs":  [
-                                               {
-                                                   "Length":  3
-                                               },
-                                               {
-                                                   "Length":  3
-                                               },
-                                               {
-                                                   "Length":  4
-                                               }
+                                               "aac",
+                                               "mp3",
+                                               "opus"
                                            ],
                    "acceptedContainers":  [
-                                              {
-                                                  "Length":  3
-                                              },
-                                              {
-                                                  "Length":  3
-                                              },
-                                              {
-                                                  "Length":  4
-                                              }
+                                              "mov",
+                                              "ogg",
+                                              "webm"
                                           ],
                    "acceptedVideoCodecs":  [
-                                               {
-                                                   "Length":  4
-                                               }
+                                               "h264"
                                            ],
                    "bframes":  -1,
                    "cqMode":  "auto",
@@ -46,23 +32,13 @@
                    "realtime":  {
                                     "enabled":  false,
                                     "resolutions":  [
-                                                        {
-
-                                                        },
-                                                        {
-
-                                                        },
-                                                        {
-
-                                                        }
+                                                        480,
+                                                        720,
+                                                        1080
                                                     ],
                                     "videoCodecs":  [
-                                                        {
-                                                            "Length":  4
-                                                        },
-                                                        {
-                                                            "Length":  4
-                                                        }
+                                                        "h264",
+                                                        "hevc"
                                                     ]
                                 },
                    "refs":  0,
@@ -203,9 +179,7 @@
                                         "modelName":  "PP-OCRv5_mobile"
                                     },
                             "urls":  [
-                                         {
-                                             "Length":  35
-                                         }
+                                         "http://immich-machine-learning:3003"
                                      ]
                         },
     "map":  {

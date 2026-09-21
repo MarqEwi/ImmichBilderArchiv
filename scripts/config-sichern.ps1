@@ -12,7 +12,9 @@ param([string]$Server = 'http://192.168.2.101:2283')
 $h = @{ 'x-api-key' = (Get-Content (Join-Path $env:USERPROFILE '.immich\api-key') -Raw).Trim() }
 
 function Sortiert($o) {
-    if ($o -is [pscustomobject]) {
+    # Nicht "-is [pscustomobject]": das trifft in PowerShell 5.1 auch auf verpackte Zeichenketten zu
+    # und machte aus "h264" ein Objekt {"Length": 4}.
+    if ($null -ne $o -and $o.GetType().Name -eq 'PSCustomObject') {
         $n = [ordered]@{}
         foreach ($k in ($o.PSObject.Properties.Name | Sort-Object)) { $n[$k] = Sortiert $o.$k }
         return [pscustomobject]$n
