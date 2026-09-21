@@ -58,6 +58,41 @@ dieselbe Benennung funktioniert also auch dort, nur von Hand. Achtung: Wird eine
 der External Library verschoben, gilt sie beim naechsten Scan als neues Asset; Album-Zuordnung und
 Beschreibungen in Immich gehen dabei verloren.
 
+## Systemkonfiguration der Weboberflaeche
+
+`immich/system-config.json` ist die versionierte Fassung der Einstellungen aus
+Verwaltung -> Einstellungen. Sichern und Wiederherstellen geht dort ueber
+"Als JSON exportieren" bzw. "Aus JSON importieren". Die Datei enthaelt keine
+Geheimnisse (SMTP und OAuth sind leer) und gehoert deshalb ins Repo.
+
+Bewusst gesetzt, abweichend von den Immich-Standardwerten:
+
+| Einstellung | Standard | hier | Grund |
+|---|---|---|---|
+| `job.metadataExtraction` | 5 | 2 | 8 schwache ARM-Kerne, wenig RAM |
+| `job.thumbnailGeneration` | 3 | 2 | siehe oben |
+| `job.backgroundTask`, `library`, `migration`, `sidecar`, `search`, `workflow` | 5 | 2 | siehe oben |
+| `library.scan` | `0 0 * * *` | `0 4 * * *` | lag auf derselben Zeit wie `nightlyTasks` (00:00) |
+| `machineLearning.enabled` | true | false | ML-Container laeuft nicht (Profil `ml`) |
+| `storageTemplate.template` | Jahr/Monat/Datei | Ereignis-Ordner | Vorgabe des Nutzers, siehe oben |
+| `backup.database` | aus | `0 02 * * *`, 7 Staende | naechtlicher Dump nach `immich/backups/` |
+
+Unveraendert gelassen und warum:
+
+- `ffmpeg.accel: disabled` - die NAS hat keine Hardware-Beschleunigung.
+- `ffmpeg.acceptedVideoCodecs: [h264]` - HEVC-Videos werden beim Upload einmalig nach
+  h264 umgewandelt. Das kostet auf dieser CPU Minuten pro Video, dafuer laufen sie
+  danach in jedem Browser. `job.videoConversion` steht auf 1, es blockiert also immer
+  nur ein Video. Wer lieber Rechenzeit spart, nimmt `hevc` in die Liste auf - dann
+  spielt Firefox solche Videos allerdings nicht ab.
+- `ffmpeg.transcode: required` - transkodiert wird nur bei HDR, abweichendem
+  Pixelformat oder unbekanntem Codec. Ein unbekannter *Container* fuehrt lediglich zum
+  Remuxing nach MP4, das ist billig.
+- `integrityChecks` taeglich 03:00 mit 1 % Stichprobe - liest Dateien von der HDD,
+  liegt aber zeitlich frei.
+
+Nach dem Import einer geaenderten Datei: Die Einstellungen greifen sofort, ein Neustart
+der Container ist nicht noetig.
 ## Starten und Stoppen
 
 Immer aus dem Projektverzeichnis, immer mit Projektnamen. **Nie `-v`** (das wuerde Volumes loeschen).
