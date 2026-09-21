@@ -2,3 +2,5 @@ immich/.env
 *.bak
 backups/
 *.sql
+# Album-Listen enthalten Namen aus dem privaten Umfeld
+listen/
