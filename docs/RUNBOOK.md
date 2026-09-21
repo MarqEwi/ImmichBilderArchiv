@@ -99,6 +99,22 @@ Unveraendert gelassen und warum:
 
 Nach dem Import einer geaenderten Datei: Die Einstellungen greifen sofort, ein Neustart
 der Container ist nicht noetig.
+## Abfragen ueber die API
+
+`scripts/immich-api.ps1` fragt Bibliotheken, Bestand und Auftrags-Warteschlangen ab und
+kann den Bibliotheks-Scan anstossen:
+
+```
+.\scripts\immich-api.ps1                 # Zustand
+.\scripts\immich-api.ps1 -Aktion scan    # Scan der externen Bibliothek anstossen
+.\scripts\immich-api.ps1 -Aktion jobs    # nur die Warteschlangen
+```
+
+Der API-Schluessel liegt in `%USERPROFILE%\.immich\api-key` - ausserhalb des Repos, nur fuer
+das eigene Konto lesbar. Erstellt wird er in Immich unter Kontoeinstellungen -> API-Schluessel;
+Immich zeigt ihn nur ein einziges Mal an. Zurueckziehen geht an derselben Stelle, dann ist er
+sofort ungueltig. Eingerichtet am 21.09.2026.
+
 ## Starten und Stoppen
 
 Immer aus dem Projektverzeichnis, immer mit Projektnamen. **Nie `-v`** (das wuerde Volumes loeschen).
