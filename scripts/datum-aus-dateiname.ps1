@@ -24,7 +24,12 @@ $h = @{ 'x-api-key' = (Get-Content (Join-Path $env:USERPROFILE '.immich\api-key'
 $alle = @(); $page = 1
 do {
     $r = Invoke-RestMethod -Uri "$Server/api/search/metadata" -Method Post -Headers $h -ContentType 'application/json' -Body (@{ size = 1000; page = $page } | ConvertTo-Json) -TimeoutSec 120
-    $alle += $r.assets.items; $page = $r.assets.nextPage
+    $alle += $r.assets.items
+    # nextPage kommt als Zeichenkette zurueck ("2"), nicht als Zahl. Ohne [int]-Umwandlung wuerde
+    # ConvertTo-Json daraus "page": "2" statt "page": 2 machen; die API lehnt das mit einem
+    # Validierungsfehler ab, $page bliebe dieselbe kaputte Zeichenkette, und while ($page) liefe
+    # endlos weiter, weil ein nicht-leerer String immer wahr ist.
+    $page = if ($r.assets.nextPage) { [int]$r.assets.nextPage } else { $null }
 } while ($page)
 
 $muster = '(?<![0-9])(20[0-2][0-9])[-_]?(0[1-9]|1[0-2])[-_]?([0-2][0-9]|3[01])(?![0-9])'
