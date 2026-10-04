@@ -5,7 +5,8 @@
 # Jede Abweichung ist mit "# ANPASSUNG:" markiert und begruendet.
 #
 # Ablage auf der NAS: /volume1/Grundlagen/docker/immich/  (Pfad ohne Leerzeichen)
-# Fotos:              /volume1/@home/MarcEwers/Steves Bilder Archiv/immich  (ueber UPLOAD_LOCATION)
+# Archiv:             /volume1/@home/MarcEwers/Steves Bilder Archiv/Bilder   (ueber ARCHIV_LOCATION)
+# Arbeitsdaten:       /volume1/@home/MarcEwers/Steves Bilder Archiv/_System  (ueber UPLOAD_LOCATION)
 # Start:  docker compose up -d        Logs: docker compose logs -f
 name: immich
 
@@ -22,6 +23,18 @@ services:
       - type: bind
         source: ${UPLOAD_LOCATION}
         target: /data
+      # ANPASSUNG: Das eigentliche Archiv liegt getrennt von Immichs Arbeitsdaten, damit der
+      # Ordner "Steves Bilder Archiv" fuer Menschen uebersichtlich bleibt: oben nur Bilder/,
+      # import/ und _System/. UPLOAD_LOCATION zeigt auf _System (upload, thumbs, encoded-video,
+      # profile, backups), ARCHIV_LOCATION auf Bilder/ und wird an der Stelle eingehaengt, an der
+      # Immich die Dateien des Benutzers "admin" ablegt.
+      # Bewusster Preis: upload/ und library/ liegen damit auf getrennten Einhaengepunkten.
+      # Immich kann neue Dateien dann nicht umbenennen, sondern kopiert sie vom Zwischenspeicher
+      # ins Archiv (die Doku raet deshalb davon ab). Vom Nutzer am 04.10.2026 so entschieden.
+      # Weitere Immich-Benutzer wuerden unter _System/library/<name> landen, nicht in Bilder/.
+      - type: bind
+        source: ${ARCHIV_LOCATION}
+        target: /data/library/admin
       - /etc/localtime:/etc/localtime:ro
       # ANPASSUNG: Eingangsordner fuer die External Library, ausdruecklich nur lesend.
       # Immich liest diese Dateien und laesst sie liegen, wo sie sind - das Storage Template

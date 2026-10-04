@@ -8,8 +8,9 @@ Stand 21.09.2026. Immich v3.2.2, Compose-Projekt `immich`.
 |---|---|
 | Compose-Projekt | `/volume1/Grundlagen/docker/immich/` (`docker-compose.yml`, `.env`) |
 | Datenbank | `/volume1/Grundlagen/docker/immich/postgres/` |
-| Fotos | `/volume1/@home/MarcEwers/Steves Bilder Archiv/immich/` |
-| Import-Ordner | `/volume1/@home/MarcEwers/Steves Bilder Archiv/import/` (noch nicht eingebunden) |
+| Archiv (Originale) | `/volume1/@home/MarcEwers/Steves Bilder Archiv/Bilder/` - Jahre und Ereignisordner |
+| Immich-Arbeitsdaten | `/volume1/@home/MarcEwers/Steves Bilder Archiv/_System/` - upload, thumbs, encoded-video, profile, backups |
+| Import-Ordner | `/volume1/@home/MarcEwers/Steves Bilder Archiv/import/` (nur lesend als External Library eingebunden) |
 | Windows-Sicht | Freigabe `personal_folder`, Ordner `Steves Bilder Archiv` |
 | Weboberflaeche | `http://192.168.2.101:2283` (nur LAN) |
 
@@ -212,9 +213,9 @@ Drei Dinge gehoeren gesichert:
    Alternativ auf der Kommandozeile:
    ```sh
    docker exec -t immich_postgres pg_dumpall --clean --if-exists -U postgres \
-     > "/volume1/@home/MarcEwers/Steves Bilder Archiv/immich/backups/dump-$(date +%F).sql"
+     > "/volume1/@home/MarcEwers/Steves Bilder Archiv/_System/backups/dump-$(date +%F).sql"
    ```
-2. **Fotos.** Der gesamte Ordner `Steves Bilder Archiv/immich/` (library, upload, thumbs, ...).
+2. **Fotos.** Der Ordner `Steves Bilder Archiv/Bilder/` (die Originale). `_System/` laesst sich bis auf `backups/` und `profile/` neu erzeugen, spart beim Wiederherstellen aber Stunden an Rechenzeit.
 3. **`.env`.** Enthaelt das Datenbank-Passwort und ist nicht im Git. Ohne sie laesst sich ein
    Dump nicht einspielen.
 
@@ -308,3 +309,27 @@ Der Scan laeuft taeglich um 04:00 (`library.scan`, siehe Systemkonfiguration) un
 sich jederzeit von Hand anstossen. Automatisches Ueberwachen des Dateisystems
 (`library.watch`) ist bewusst aus: Es gilt als experimentell und braucht inotify-Watches
 fuer jede Datei.
+## Ordneraufteilung seit 04.10.2026
+
+Auf Wunsch des Nutzers ist `Steves Bilder Archiv` fuer Menschen aufgeraeumt:
+
+```
+Steves Bilder Archiv/
+├── Bilder/     das Archiv: <Jahr>/<Album>/<Datei>
+├── import/     eigene Sammlungen, von Immich nur gelesen
+└── _System/    Immichs Arbeitsdaten - nicht anfassen
+```
+
+Technisch: `UPLOAD_LOCATION` zeigt auf `_System` (im Container `/data`), `ARCHIV_LOCATION` auf
+`Bilder` und ist unter `/data/library/admin` eingehaengt. Die Pfade in der Datenbank sind
+Containerpfade und haben sich nicht geaendert. Umzug per `mv` auf derselben Platte, Dateizahlen
+vorher und nachher identisch (4443 Archiv, 7018 Arbeitsdaten).
+
+Bewusst in Kauf genommen: `upload/` und das Archiv liegen auf getrennten Einhaengepunkten. Immich
+kann neue Dateien deshalb nicht umbenennen, sondern kopiert sie vom Zwischenspeicher ins Archiv.
+Die Doku raet aus diesem Grund davon ab; funktional ist es unkritisch, kostet aber Plattenlast.
+
+In `Bilder/` nichts von Hand umbenennen, verschieben oder loeschen - Immich fuehrt die Pfade in
+seiner Datenbank und findet die Dateien sonst nicht mehr. Aendern nur ueber Immich (Album
+umbenennen, Datei loeschen). Der Ordner `_System/library/` enthaelt nur Immichs Markerdatei und
+den leeren Einhaengepunkt `admin`.
