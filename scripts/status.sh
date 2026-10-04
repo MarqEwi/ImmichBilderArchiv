@@ -2,7 +2,7 @@
 # Zeigt den Zustand des Immich-Fotoarchivs. Aendert nichts.
 # Aufruf vom PC (cmd-Redirect, weil PowerShell beim Pipen ein BOM anhaengt und bash daran scheitert):
 #   cmd /c "ssh -4 MarcEwers@192.168.2.101 bash -s < scripts\status.sh"
-# Seit 04.10.2026: Archiv unter Bilder/, Immichs Arbeitsdaten unter _System/
+# Seit 04.10.2026: Archiv unter Archiv/, Immichs Arbeitsdaten unter _System/
 P="/volume1/@home/MarcEwers/Steves Bilder Archiv"
 
 echo "=== Container ==="
@@ -22,13 +22,13 @@ done
 echo
 echo "=== Dateien je Ordner ==="
 cd "$P" || exit 1
-for d in Bilder _System/upload _System/encoded-video _System/thumbs _System/backups; do
+for d in Archiv _System/upload _System/encoded-video _System/thumbs _System/backups; do
   printf "%-22s %5s Dateien  %8s\n" "$d" "$(find "$d" -type f ! -name .immich | wc -l)" "$(du -sh "$d" | cut -f1)"
 done
 
 echo
-echo "=== Ereignis-Ordner in Bilder/ ==="
-cd "$P/Bilder" || exit 1
+echo "=== Ereignis-Ordner in Archiv/ ==="
+cd "$P/Archiv" || exit 1
 find . -mindepth 2 -maxdepth 2 -type d 2>/dev/null | sed "s|^\./||" | sort
 [ -z "$(find . -mindepth 2 -maxdepth 2 -type d 2>/dev/null)" ] && echo "(noch keine)"
 
