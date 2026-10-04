@@ -129,10 +129,16 @@ services:
     # ANPASSUNG: Speichergrenze. Gemessen 21.09.2026: 145 MB echter Speicher (anon), der Rest
     # der in "docker stats" sichtbaren ~300 MB ist Page-Cache und wird bei Bedarf freigegeben.
     # 256M lassen genug Reserve; die eingesparten 64M gehen an immich-server.
+    # KORREKTUR 04.10.2026: 512M statt 256M. Die 256M waren im Leerlauf gemessen und reichen fuer
+    # den Geodaten-Import nicht, den Immich nach einem Update mit neuen Geodaten beim Start
+    # ausfuehrt (insert into geodata_places). Beim Update auf v3.2.4 wurde der Postgres-Prozess
+    # fuenfmal vom Limit beendet (memory.events: oom_kill 5, Spitze 270 MB), der Server lief in
+    # einer Neustart-Schleife mit "CONNECTION_CLOSED database:5432". Das Limit ist nur eine
+    # Obergrenze; im Normalbetrieb braucht Postgres weiterhin 50-150 MB.
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
 
   storage-migration:
     # ANPASSUNG: zusaetzlicher Dienst, nicht Teil der offiziellen Datei. Stoesst nachts die

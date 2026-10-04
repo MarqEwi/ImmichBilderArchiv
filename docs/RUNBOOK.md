@@ -1,6 +1,6 @@
 # Runbook: Immich auf STEVENAS
 
-Stand 21.09.2026. Immich v3.2.2, Compose-Projekt `immich`.
+Stand 04.10.2026. Immich v3.2.4, Compose-Projekt `immich`.
 
 ## Wo liegt was
 
@@ -200,6 +200,21 @@ docker logs -t immich_server                 # mit Docker-Zeitstempeln
 5. `docker compose pull && docker compose up -d`
 6. `docker compose logs -f immich-server` bis "Immich Server is listening".
 
+### Update auf v3.2.4 am 04.10.2026 - was schiefging
+
+Nach dem Start lief der Server in einer Neustart-Schleife:
+`Unable to initialize reverse geocoding: Error: write CONNECTION_CLOSED database:5432`.
+Ursache: Ein Update mit neuen Geodaten laedt beim Start rund 230.000 Datensaetze in die Tabelle
+`geodata_places`. Dabei wurde der Postgres-Prozess fuenfmal vom Speicherlimit des Containers
+beendet (damals 256 MB). Zu erkennen an `oom_kill` in
+`/sys/fs/cgroup/system.slice/docker-<id>.scope/memory.events` und an
+`server process ... was terminated by signal 9` im Postgres-Log - `docker inspect` zeigt dabei
+`OOMKilled=false`, weil nicht der ganze Container beendet wird.
+
+Behoben mit Postgres-Limit 512 MB. Danach lief der Import in 47 Sekunden durch, 0 Fehler.
+Bei kuenftigen Updates: erst `docker compose stop immich-server`, falls sich die Schleife
+wiederholt, damit Postgres nicht weiter abgeschossen wird; dann Limit pruefen.
+
 ## Backup
 
 Drei Dinge gehoeren gesichert:
@@ -248,7 +263,7 @@ enthalten wie zum Zeitpunkt des Dumps.
 
 Die NAS hat 3,8 GB, davon ~1,3 GB frei, und `swappiness=1` - der Kernel swappt also kaum,
 sondern beendet bei Speichernot Prozesse (OOM-Killer). Deshalb sind Grenzen gesetzt:
-Server 640 MB, Postgres 320 MB, Valkey 64 MB.
+Server 896 MB, Postgres 512 MB, Valkey 64 MB.
 
 Symptome: Container startet staendig neu, `docker inspect immich_server --format '{{.State.OOMKilled}}'`
 meldet `true`, oder `dmesg | tail` zeigt "Out of memory".
